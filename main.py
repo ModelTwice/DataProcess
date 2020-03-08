@@ -9,6 +9,7 @@ import seaborn as sns
 import numpy as np
 from numpy.random import randn
 import matplotlib as mpl
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 from scipy import stats
 
@@ -23,7 +24,8 @@ target_dir = './a'
 data_names = [data_name_1, data_name_2, data_name_3]
 lines = []
 
-target_cols = [1, 2, 4, 7, 8, 9, 10, 12, 13, 14]
+# target_cols = [1, 2, 4, 7, 8, 9, 10, 12, 13, 14]
+target_cols = [4, 12, 13, 14]
 accept_threshold = 10
 
 
@@ -46,8 +48,18 @@ def cmp_datetime(a, b):
         return 0
 
 
+def get_data(file_name):
+    res = []
+    with open(target_dir + '/' + file_name + '.csv', 'r', encoding='UTF-8') as f:
+        records = csv.reader(f)
+        headers = next(records)
+        for line in records:
+            res.append(line)
+        return res
+
+
 if __name__ == '__main__':
-    data_name = data_name_2
+    data_name = data_name_3
     with open(data_dir + '/' + data_name + '.csv', 'r', encoding='UTF-8') as f:
         file_list = csv.reader(f)
         headers = next(file_list)
@@ -56,16 +68,15 @@ if __name__ == '__main__':
 
     lines = list(filter(lambda x: x[11] == 'Y' or x[11] == 'y', lines))
     lines = select_col(lines, target_cols)
-    # print(len(lines))
-    count_kinds = Counter(list(map(lambda x: x[2], lines)))
-    ct_dist = Counter(count_kinds.values())
+    count_kinds = Counter(list(map(lambda x: x[0], lines)))
+    # ct_dist = Counter(count_kinds.values())
     # with open(target_dir + '/' + data_name + '_ct.txt', 'w', encoding='UTF-8') as f:
     #     f.write(str(count_kinds.most_common()))
 
-    plt.hist(list(filter(lambda x: x > 1, list(count_kinds.values()))), bins=800, histtype="stepfilled")
+    # plt.hist(list(filter(lambda x: x > 1, list(count_kinds.values()))), bins=800, histtype="stepfilled")
     # plt.show()
-    # sns.distplot(list(count_kinds.values()), bins=200, rug=False)
-    plt.show()
+    # sns.distplot(list(count_kinds.values()), bins=2000, kde=True)
+    # plt.show()
     # s = 0
     # for key in count_kinds.keys():
     #     if count_kinds[key] >= 10:
@@ -75,20 +86,18 @@ if __name__ == '__main__':
     # for key, value in count_kinds:
     #     tc.append(tuple((key, value)))
     # print(sorted(tc, key=lambda x: x[1], reverse=True))
-    lines = list(filter(lambda x: count_kinds[x[2]] >= accept_threshold, lines))
-    groups = groupby(sorted(lines, key=itemgetter(2)), key=lambda x: x[2])
+    lines = list(filter(lambda x: count_kinds[x[0]] >= accept_threshold, lines))
+    groups = groupby(sorted(lines, key=itemgetter(0)), key=lambda x: x[0])
     res = []
     for key, group in groups:
         res.extend(sorted(list(group), key=cmp_to_key(cmp_datetime)))
-        # print(key, len(list(group)))
+    # print(key, len(list(group)))
     # print(res)
     # print(count_kinds)
     #
-    # with open(target_dir + '/' + data_name + '.csv', 'w', encoding='UTF-8', newline='') as f:
-    #     writer = csv.writer(f)
-    #     writer.writerow(*select_col([headers], target_cols))
-    #     writer.writerows(res)
-
-    # csv.unregister_dialect('tab_dialect')
+    with open(target_dir + '/' + data_name + '_cm.csv', 'w', encoding='UTF-8', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(*select_col([headers], target_cols))
+        writer.writerows(res)
 
     print('Done')
